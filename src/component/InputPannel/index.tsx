@@ -1,6 +1,6 @@
 
 import axios from 'axios';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from './index.module.scss';
 
 interface AudioInfo {
@@ -10,16 +10,21 @@ interface AudioInfo {
     image_url: string;
     title: string;
 }
+// interface InputProps {
+//     songId: string;
+//     setSongId: (x: string) => void
+// }
 
-export const InputPannel = () => {
-    const [songId, setSongId] = useState('')
+export const InputIdToDownload = () => {
+    // const { songId, setSongId } = props
+    const [songId, setSongId] = useState<string>('')
     // 获取信息状态
     const [loading, setLoading] = useState<boolean>(false);
     const [audioInfo, setAudioInfo] = useState<AudioInfo | null>(null);
 
-    // 点击生成
+    // 请求地址
     const baseUrl = "http://localhost:3000";
-    // 获取当前音频的信息（含下载链接）
+    // 函数：获取当前音频的信息（含下载链接）
     async function getAudioInformation(audioIds: string) {
         setLoading(true);
         const url = `${baseUrl}/api/get?ids=${audioIds}`;
@@ -41,9 +46,9 @@ export const InputPannel = () => {
         }
         setLoading(false);
     }
-    // 下载功能函数
+    // 函数：下载功能函数
     function downloadAudio() {
-        if (audioInfo) {
+        if (audioInfo && audioInfo.audio_url !== '') {
             const audioUrl = audioInfo.audio_url;
             // 使用 fetch API 下载文件
             fetch(audioUrl)
@@ -54,7 +59,7 @@ export const InputPannel = () => {
                     const a = document.createElement('a');
                     a.style.display = 'none';
                     a.href = url;
-                    a.download = "下载的音频.mp3"; // 指定下载文件名
+                    a.download = audioInfo.title, ".mp3"; // 指定下载文件名
                     document.body.appendChild(a);
                     a.click();
 
@@ -66,16 +71,21 @@ export const InputPannel = () => {
         }
     }
 
+    // 按钮点击行为
     const handleGenerateAudio = async () => {
         getAudioInformation(songId);
     };
+
+    useEffect(() => {
+        downloadAudio()
+    }, [audioInfo?.audio_url])
 
 
     return (
         <div className={styles.inputWindow}>
             <div className={styles.inputWindowContainer}>
-                <button onClick={() => downloadAudio()}>download</button>
                 <textarea
+                    style={{ color: 'black' }}
                     value={songId}
                     onChange={e => setSongId(e.target.value)}
                     placeholder="input the songId..."
